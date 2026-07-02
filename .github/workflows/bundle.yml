@@ -1,0 +1,43 @@
+name: Build bundle
+
+# Runs on an hourly schedule and on manual dispatch.
+#
+# ⚠  A `push` trigger is intentionally absent.
+#    GitHub executes a workflow from the file on the branch that *received* the
+#    push.  This file lives only on `main`.  A push to `backend`, `frontend`,
+#    or `cli` would therefore never trigger a workflow that only exists on `main`.
+#    Use the hourly cron (or workflow_dispatch) to pick up changes on those
+#    branches instead.
+
+on:
+  schedule:
+    - cron: '0 * * * *'      # every hour at :00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write             # the script pushes to bundle branch + main
+
+jobs:
+  build-bundle:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main with submodules
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: true
+          fetch-depth: 0      # full history so git push succeeds
+
+      - name: Set up Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Configure git identity (github-actions[bot])
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name  "github-actions[bot]"
+
+      - name: Build and push bundle
+        run: node scripts/build-bundle.mjs --push
