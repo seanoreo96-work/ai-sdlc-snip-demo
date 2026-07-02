@@ -1,0 +1,69 @@
+<main>
+  <header>
+    <h1>Snip</h1>
+    <p class="tagline">Tiny URL shortener</p>
+  </header>
+
+  <section class="card">
+    <h2>Shorten a URL</h2>
+    <div class="form-row">
+      <input
+        type="url"
+        placeholder="https://example.com/long/path"
+        [value]="url()"
+        (input)="url.set($any($event.target).value)"
+        (keydown.enter)="shorten()"
+        [disabled]="loading()"
+        autocomplete="off"
+      />
+      <button (click)="shorten()" [disabled]="loading() || !url().trim()">
+        {{ loading() ? 'Shortening...' : 'Shorten' }}
+      </button>
+    </div>
+
+    @if (newLink(); as link) {
+      <div class="banner success">
+        Short link:
+        <a [href]="link.shortUrl" target="_blank" rel="noopener">{{ link.shortUrl }}</a>
+      </div>
+    }
+
+    @if (error()) {
+      <div class="banner error">{{ error() }}</div>
+    }
+  </section>
+
+  <section class="card">
+    <h2>All links</h2>
+    @if (links().length === 0) {
+      <p class="empty">No links yet.</p>
+    } @else {
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Original URL</th>
+            <th>Hits</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (link of links(); track link.code) {
+            <tr>
+              <td>
+                <a [href]="link.shortUrl" target="_blank" rel="noopener">{{ link.code }}</a>
+              </td>
+              <td class="url-cell">
+                <a [href]="link.url" target="_blank" rel="noopener" [title]="link.url">
+                  {{ link.url }}
+                </a>
+              </td>
+              <td>{{ link.hits }}</td>
+              <td>{{ link.createdAt | date:'short' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+</main>
