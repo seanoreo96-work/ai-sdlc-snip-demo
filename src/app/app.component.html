@@ -1,12 +1,11 @@
 <main>
-  <header>
-    <h1>Snip</h1>
-    <p class="tagline">Tiny URL shortener</p>
-  </header>
+  <div class="hero">
+    <header>
+      <h1>Snip</h1>
+      <p class="tagline">Paste a URL. Get a tiny link.</p>
+    </header>
 
-  <section class="card">
-    <h2>Shorten a URL</h2>
-    <div class="form-row">
+    <div class="input-pill">
       <input
         type="url"
         placeholder="https://example.com/long/path"
@@ -17,7 +16,7 @@
         autocomplete="off"
       />
       <button (click)="shorten()" [disabled]="loading() || !url().trim()">
-        {{ loading() ? 'Shortening...' : 'Shorten' }}
+        {{ loading() ? 'Shortening...' : 'Snip it' }}
       </button>
     </div>
 
@@ -31,7 +30,7 @@
     @if (error()) {
       <div class="banner error">{{ error() }}</div>
     }
-  </section>
+  </div>
 
   <section class="card">
     <h2>All links</h2>
