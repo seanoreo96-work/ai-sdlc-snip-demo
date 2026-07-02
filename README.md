@@ -7,7 +7,10 @@ orphan branches of this repo, wired together here as Git submodules.
 main  ← you are here (superproject)
 ├── backend/   → branch: backend   (Bun HTTP server)
 ├── frontend/  → branch: frontend  (Angular 19 SPA)
-└── cli/       → branch: cli       (Node.js CommonJS CLI)
+├── cli/       → branch: cli       (Node.js CommonJS CLI)
+├── bundle/    → branch: bundle    (generated deployment artefact — do not edit)
+└── scripts/
+    └── build-bundle.mjs           (assembles bundle/ from the three source branches)
 ```
 
 ---
@@ -169,4 +172,52 @@ git submodule status
 #  f07ff70 backend  (heads/backend)
 #  06798c8 frontend (heads/frontend)
 #  34e7059 cli      (heads/cli)
+#  99b9ebe bundle   (heads/bundle)
+```
+
+---
+
+## Bundle / Deployment (`scripts/build-bundle.mjs`)
+
+The `bundle/` submodule (branch `bundle`) is a **generated** deployment
+artefact — it is never edited by hand.  It contains:
+
+| File | Origin |
+|------|--------|
+| `server.js` | copied from `backend/` |
+| `cli.js` | copied from `cli/` |
+| `public/` | Angular build output from `frontend/` |
+| `.env` | `PUBLIC_DIR=./public` (tells the server to also serve the SPA) |
+| `package.json` | `"start": "bun server.js"` — no `"type"` field so `cli.js` stays CommonJS |
+| `Dockerfile` | `FROM oven/bun:1-alpine` + `CMD bun server.js` |
+| `.dockerignore` | excludes `node_modules`, `.git`, `*.md` |
+| `railway.json` | selects the Dockerfile builder for one-click Railway deploys |
+
+### Running the build script
+
+```bash
+# Assemble locally (commits inside bundle/ and bumps pointers in superproject,
+# but does NOT push anything):
+node scripts/build-bundle.mjs
+
+# Assemble AND push bundle branch + main:
+node scripts/build-bundle.mjs --push
+```
+
+The script is a **safe no-op** when nothing changed — it checks the staged diff
+before every `git commit` and skips if the tree is clean.
+
+### Running the bundle directly
+
+```bash
+cd bundle
+bun start           # serves API on :3000 AND static SPA from ./public
+```
+
+Or with Docker:
+
+```bash
+cd bundle
+docker build -t snip .
+docker run -p 3000:3000 snip
 ```
